@@ -16,12 +16,17 @@ def get_db():
 
 @app.get("/expenses", response_model=list[schemas.Expense])
 def read_expenses(db: Session = Depends(get_db)):
-    return db.query(models.Expense).all()
+    try:
+        return db.query(models.Expense).all()
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=f"Failed to fetch from database: {str(e)}")
 
-@app.post("/expenses", response_model=schemas.Expense)
+@app.post("/create_expense")
 def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)):
-    db_expense = models.Expense(**expense.dict())
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-    return db_expense
+    try:
+        db_expense = models.Expense(**expense.model_dump())
+        db.add(db_expense)
+        db.commit()
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create expense: {str(e)}")
