@@ -1,0 +1,11 @@
+1.If MySQL server runs on port 3306 (by default), why do i have the option to create new connections?
+  what meaning does it serve?
+  
+2.Can i or can i not run another server say on port 3307?
+
+3.In models.py in Users table I have  missed a column that is 'role:str'->'admin/client', if I just
+  change the Users model and add //admin:str = Column(String(20)) and run fastapi server, I get error
+
+  "sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'role' in 'field list'")
+
+  why is models.Base.metadata.create_all(bind=engine) resolving it?
