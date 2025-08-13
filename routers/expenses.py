@@ -23,7 +23,7 @@ db_dependecny = Annotated[Session,Depends(get_db)]
 user_dependency = Annotated[dict,Depends(get_current_user)]
 
 class ExpenseRequest(BaseModel):
-    expense_name:str = Field(min_length=3, max_lenth=50)
+    expense_name:str = Field(min_length=3, max_length=50)
     amount:float = Field(gt=0)
     date:str = Field(min_length=10)
 
