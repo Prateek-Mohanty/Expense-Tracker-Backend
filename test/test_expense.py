@@ -3,7 +3,7 @@ from main import app
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, text
 from database import Base
-from routers.auth import get_db, get_current_user
+from routers import auth, expenses
 import pytest
 from models import Expense
 from fastapi import status
@@ -27,13 +27,19 @@ def override_get_db():
 def override_get_current_user():
     return {'username':'codingwithmetest','id':1}
 
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user] = override_get_current_user
+app.dependency_overrides[auth.get_db] = override_get_db
+app.dependency_overrides[expenses.get_db] = override_get_db
+app.dependency_overrides[auth.get_current_user] = override_get_current_user
 
 client = TestClient(app)
 
 @pytest.fixture
 def dummy_user():
+
+    with engine.connect() as connection:
+        connection.execute(text('DELETE FROM Expenses;'))
+        connection.commit()
+
     expense = Expense(
         expense_name = 'New Expense', 
         amount = 500, 
@@ -45,15 +51,20 @@ def dummy_user():
     db.add(expense)
     db.commit()
     yield db
-    with engine.connect() as connection:
-        connection.execute(text('DELETE FROM Expenses;'))
-        connection.commit()
 
 
 def test_read_all_expenses(dummy_user):
     response = client.get('/expense/get_all')
     assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [{
+        'id':1,
+        'expense_name':'New Expense',
+        'amount':500.0,
+        'date':'2024-03-22',
+        'owner_expeense_id':1
+    }]
 
 def test_read_one_expense(dummy_user):
-    response = client.get('/expense/{dummy_user.id}')
+    expense_id = dummy_user.query(Expense).first().id
+    response = client.get(f'/expense/{expense_id}')
     assert response.status_code == 200
