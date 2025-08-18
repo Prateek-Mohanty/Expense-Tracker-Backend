@@ -5,6 +5,7 @@ from database import SessionLocal, engine
 from models import Expense
 from typing import Annotated
 from starlette import status
+from datetime import date
 from .auth import get_current_user
 
 router = APIRouter(
@@ -25,7 +26,7 @@ user_dependency = Annotated[dict,Depends(get_current_user)]
 class ExpenseRequest(BaseModel):
     expense_name:str = Field(min_length=3, max_length=50)
     amount:float = Field(gt=0)
-    date:str = Field(min_length=10)
+    date:date
 
 
 @router.get("/get_all",status_code=status.HTTP_200_OK)
@@ -43,7 +44,7 @@ async def get_expense_by_id(user:user_dependency, db:db_dependecny, expense_id:i
         return expense_model
     raise HTTPException(status_code=404,detail="Expense not found.")
 
-@router.post('/create_expense')
+@router.post('/create_expense', status_code = status.HTTP_201_CREATED)
 async def create_new_expense(user:user_dependency, db:db_dependecny, expenserequest:ExpenseRequest):
     if user is None:
         raise HTTPException(status_code=401, detail='Unauthorized access blocked')
@@ -51,7 +52,7 @@ async def create_new_expense(user:user_dependency, db:db_dependecny, expenserequ
     db.add(expense_model)
     db.commit()
 
-@router.put('/{expense_id}')
+@router.put('/{expense_id}', status_code = status.HTTP_204_NO_CONTENT)
 async def update_expense_by_id(user:user_dependency, db:db_dependecny,expense_request:ExpenseRequest,expense_id:int = Path(gt=0)):
     if user is None:
         raise HTTPException(status_code=401, detail='Unauthorized access blocked')
